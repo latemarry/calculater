@@ -1,249 +1,203 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Calculator UI</title>
-  <style>
-    /* Mobile-first base */
-    :root{
-      --bg: #f4f4f4;
-      --card: #fff;
-      --muted: #e0e0e0;
-      --operator: #ffd54f;
-      --equal: #4caf50;
-      --danger: #e57373;
-      --shadow: 0 2px 8px rgba(0,0,0,0.08);
-      --radius: 12px;
-    }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Late Marry — Matrimony (Demo)</title>
+<style>
+  :root{
+    --bg:#f6f7fb; --card:#ffffff; --accent:#6c63ff; --muted:#6b6f76;
+    --radius:12px; --shadow: 0 6px 18px rgba(35,35,90,0.08);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:Inter, system-ui, Arial, sans-serif; background:var(--bg); color:#111;
+    -webkit-font-smoothing:antialiased;
+  }
+  header{
+    background:linear-gradient(90deg,var(--accent), #3f8cff);
+    color:#fff; padding:18px 16px;
+    display:flex; gap:12px; align-items:center; justify-content:space-between;
+  }
+  header h1{font-size:18px; margin:0}
+  .container{max-width:1100px; margin:20px auto; padding:0 16px;}
+  .grid {
+    display:grid; gap:16px;
+    grid-template-columns: 1fr 420px;
+    align-items:start;
+  }
 
-    html,body{
-      height:100%;
-      margin:0;
-    }
+  /* Card styles */
+  .card{background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px;}
+  .form-row{display:flex; gap:8px; margin-bottom:10px;}
+  .form-row .col{flex:1}
+  label{display:block; font-size:13px; color:var(--muted); margin-bottom:6px;}
+  input[type="text"], input[type="number"], input[type="email"], select, textarea{
+    width:100%; padding:10px 12px; border-radius:8px; border:1px solid #e6e9f0; font-size:14px;
+  }
+  textarea{min-height:80px; resize:vertical}
+  button{background:var(--accent); color:#fff; border:0; padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:600}
+  button.secondary{background:#eef0ff; color:var(--accent); font-weight:600}
+  .muted{color:var(--muted); font-size:13px}
 
-    body {
-      font-family: Arial, sans-serif;
-      background: var(--bg);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-      box-sizing: border-box;
-    }
+  /* Profiles list */
+  .profiles{
+    display:grid; gap:12px;
+    grid-template-columns: repeat(auto-fill, minmax(220px,1fr));
+  }
+  .profile-card{display:flex; gap:12px; align-items:flex-start; padding:12px; border-radius:10px;}
+  .profile-card img{width:80px; height:80px; object-fit:cover; border-radius:10px; flex-shrink:0}
+  .profile-info{flex:1}
+  .profile-info h3{margin:0 0 6px 0; font-size:16px}
+  .profile-meta{font-size:13px; color:var(--muted); margin-bottom:8px}
+  .profile-actions{display:flex; gap:8px; margin-top:6px}
 
-    .calculator {
-      width: 100%;
-      max-width: 420px;     /* prevents growing too wide on large screens */
-      background: var(--card);
-      padding: 14px;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      box-sizing: border-box;
-    }
+  /* Search + controls */
+  .search-row{display:flex; gap:8px; margin-bottom:12px}
+  .search-row input{flex:1}
 
-    /* Display */
-    .display {
-      width: 100%;
-      height: 56px;                 /* touch-friendly */
-      margin-bottom: 14px;
-      font-size: clamp(1.25rem, 4.5vw, 1.75rem);
-      text-align: right;
-      padding: 10px 12px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      background: #fafafa;
-      box-sizing: border-box;
-      color: #111;
-      caret-color: transparent;     /* since input is disabled/readonly */
-    }
+  /* Mobile adjustments */
+  @media (max-width:940px){
+    .grid{grid-template-columns: 1fr;}
+    header{padding:14px}
+    .profile-card img{width:68px; height:68px}
+  }
 
-    /* Buttons grid */
-    .buttons {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-    }
-
-    .button {
-      min-height: 56px;             /* touch target >= 48-56px */
-      padding: 10px;
-      font-size: clamp(1rem, 3.2vw, 1.1rem);
-      border: none;
-      border-radius: 8px;
-      background: var(--muted);
-      cursor: pointer;
-      transition: transform .08s ease, box-shadow .08s ease;
-      box-shadow: 0 1px 0 rgba(0,0,0,0.03) inset;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    .button:active {
-      transform: translateY(1px);
-      filter: brightness(.95);
-    }
-
-    .button.operator {
-      background: var(--operator);
-    }
-
-    .button.equal {
-      background: var(--equal);
-      color: #fff;
-      grid-column: span 2;
-    }
-
-    .button.clear {
-      background: var(--danger);
-      color: #fff;
-    }
-
-    /* Make sure last row buttons look good on narrow screens */
-    .row-span-2 {
-      grid-column: span 2;
-    }
-
-    /* Larger screens — give a bit more padding and spacing */
-    @media (min-width: 640px) {
-      .calculator {
-        padding: 20px;
-      }
-      .buttons { gap: 12px; }
-      .button { min-height: 64px; border-radius: 10px; }
-    }
-
-    /* Landscape small devices: center and limit vertical stretching */
-    @media (max-height: 420px) and (orientation: landscape) {
-      body { align-items: flex-start; padding-top: 18px; padding-bottom: 18px; }
-      .calculator { max-width: 520px; }
-    }
-
-    /* Accessibility focus states */
-    .button:focus {
-      outline: 3px solid rgba(80,150,255,0.18);
-      outline-offset: 2px;
-    }
-    .display:focus {
-      outline: 3px solid rgba(80,150,255,0.1);
-    }
-  </style>
+  /* tiny helpers */
+  .center{display:flex; align-items:center; justify-content:center}
+  .small{font-size:13px}
+  .danger{background:#ff6b6b}
+  .pill{display:inline-block; padding:6px 8px; border-radius:999px; background:#f1f3ff; color:var(--accent); font-weight:600; font-size:12px}
+</style>
 </head>
 <body>
-  <div class="calculator" role="application" aria-label="Simple calculator">
-    <!-- use readonly instead of disabled so screen-readers can read it and it can be focused -->
-    <input type="text" class="display" id="display" aria-label="Calculator display" readonly />
+<header>
+  <div style="display:flex;gap:12px;align-items:center">
+    <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24'><rect fill='%23ffffff' rx='6' width='24' height='24'/><text x='50%' y='55%' text-anchor='middle' font-size='12' fill='%236c63ff' font-family='Arial' font-weight='700'>LM</text></svg>" alt="" style="border-radius:8px"/>
+    <h1>Late Marry — Demo</h1>
+  </div>
+  <div class="small muted">Client-side demo • Save & export profiles</div>
+</header>
 
-    <div class="buttons" role="group" aria-label="Calculator buttons">
-      <button class="button clear" onclick="clearDisplay()" aria-label="Clear (C)">C</button>
-      <button class="button" onclick="appendValue('(')" aria-label="Open parenthesis">(</button>
-      <button class="button" onclick="appendValue(')')" aria-label="Close parenthesis">)</button>
-      <button class="button operator" onclick="appendValue('/')" aria-label="Divide">÷</button>
+<main class="container">
+  <div class="grid">
+    <!-- Left: Profiles and search -->
+    <div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <strong>Profiles</strong>
+            <div class="muted small">Browse, search and manage</div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button id="exportBtn" class="secondary small">Export JSON</button>
+            <label class="secondary small" style="padding:9px 12px; border-radius:10px; cursor:pointer;">
+              Import JSON <input id="importFile" type="file" accept="application/json" style="display:none">
+            </label>
+          </div>
+        </div>
 
-      <button class="button" onclick="appendValue('7')" aria-label="Seven">7</button>
-      <button class="button" onclick="appendValue('8')" aria-label="Eight">8</button>
-      <button class="button" onclick="appendValue('9')" aria-label="Nine">9</button>
-      <button class="button operator" onclick="appendValue('*')" aria-label="Multiply">×</button>
+        <div style="height:12px"></div>
 
-      <button class="button" onclick="appendValue('4')" aria-label="Four">4</button>
-      <button class="button" onclick="appendValue('5')" aria-label="Five">5</button>
-      <button class="button" onclick="appendValue('6')" aria-label="Six">6</button>
-      <button class="button operator" onclick="appendValue('-')" aria-label="Minus">−</button>
+        <div class="search-row">
+          <input id="searchInput" type="text" placeholder="Search by name or location..." aria-label="Search profiles">
+          <select id="filterAge">
+            <option value="">Any age</option>
+            <option value="18-25">18–25</option>
+            <option value="26-35">26–35</option>
+            <option value="36-50">36–50</option>
+          </select>
+          <button id="clearFilters" class="secondary">Clear</button>
+        </div>
 
-      <button class="button" onclick="appendValue('1')" aria-label="One">1</button>
-      <button class="button" onclick="appendValue('2')" aria-label="Two">2</button>
-      <button class="button" onclick="appendValue('3')" aria-label="Three">3</button>
-      <button class="button operator" onclick="appendValue('+')" aria-label="Plus">+</button>
+        <div id="profilesList" class="profiles" aria-live="polite"></div>
 
-      <button class="button" onclick="appendValue('0')" aria-label="Zero">0</button>
-      <button class="button" onclick="appendValue('.')" aria-label="Decimal point">.</button>
-      <button class="button equal" onclick="calculate()" aria-label="Equals">=</button>
+        <div id="emptyState" class="center small muted" style="padding:18px; display:none">
+          No profiles yet — create one using the form on the right.
+        </div>
+      </div>
+
+      <div style="height:12px"></div>
+
+      <div class="card small muted">
+        Tip: This is a client-only demo. To make it live with forms or authentication, connect to a backend (Firebase, Supabase, or serverless).
+      </div>
+    </div>
+
+    <!-- Right: Form -->
+    <aside>
+      <div class="card" id="formCard">
+        <strong id="formTitle">Add profile</strong>
+        <div class="muted small" style="margin-bottom:12px">Create or edit a profile</div>
+
+        <form id="profileForm" autocomplete="off" novalidate>
+          <div class="form-row">
+            <div class="col">
+              <label for="name">Full name</label>
+              <input id="name" name="name" type="text" required placeholder="e.g. Anu Varma">
+            </div>
+            <div class="col">
+              <label for="age">Age</label>
+              <input id="age" name="age" type="number" min="18" max="100" required placeholder="28">
+            </div>
+          </div>
+
+          <label for="location">Location</label>
+          <input id="location" name="location" type="text" placeholder="City, State" required>
+
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" placeholder="you@example.com">
+
+          <label for="bio">Bio (short)</label>
+          <textarea id="bio" name="bio" placeholder="Write a short bio..."></textarea>
+
+          <label for="photo">Profile photo (optional)</label>
+          <input id="photo" name="photo" type="file" accept="image/*">
+
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button type="submit" id="saveBtn">Save profile</button>
+            <button type="button" id="resetBtn" class="secondary">Reset</button>
+          </div>
+          <input type="hidden" id="editingId">
+        </form>
+      </div>
+
+      <div style="height:12px"></div>
+
+      <div class="card small">
+        <strong>Usage</strong>
+        <ul style="padding-left:18px;margin:8px 0 0 0">
+          <li>Tap a profile card to view details.</li>
+          <li>Edit to update. Delete to remove.</li>
+          <li>Export JSON to backup; import to restore.</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<!-- Profile viewer modal (simple) -->
+<div id="modal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:20px;z-index:60">
+  <div style="position:absolute;inset:0;background:rgba(10,10,20,0.35)"></div>
+  <div class="card" style="max-width:720px;width:100%;position:relative;z-index:80">
+    <div style="display:flex;gap:12px">
+      <img id="viewPhoto" src="" alt="photo" style="width:140px;height:140px;object-fit:cover;border-radius:12px">
+      <div style="flex:1">
+        <h2 id="viewName" style="margin:0 0 8px 0"></h2>
+        <div id="viewMeta" class="muted small"></div>
+        <p id="viewBio" style="margin-top:12px"></p>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button id="modalEditBtn">Edit</button>
+          <button id="modalDeleteBtn" class="danger">Delete</button>
+          <button id="modalCloseBtn" class="secondary">Close</button>
+        </div>
+      </div>
     </div>
   </div>
+</div>
 
-  <script>
-    const display = document.getElementById('display');
+<script>
+/* Simple client-side storage & UI */
+const STORAGE_KEY = 'lateMarry_profiles_v1';
 
-    // Small helper: avoid adding multiple leading zeros or duplicate operators in a row.
-    function appendValue(val) {
-      // Basic validation rules
-      const lastChar = display.value.slice(-1);
-
-      // Prevent two operators in a row (except for '(' and ')' rules)
-      const operators = ['+', '-', '*', '/', '.'];
-      if (operators.includes(val)) {
-        // if display empty and '.' pressed, allow "0."
-        if (!display.value && val === '.') {
-          display.value = '0.';
-          return;
-        }
-        if (!display.value && (val !== '.')) return;
-        if (operators.includes(lastChar)) {
-          // replace last operator with new one (except allow '.' after digit)
-          if (val === '.' && lastChar !== '.') {
-            display.value += val;
-            return;
-          }
-          // replace operator to avoid sequences like "++" or "+*"
-          display.value = display.value.slice(0, -1) + val;
-          return;
-        }
-      }
-
-      // prevent multiple leading zeros like "00"
-      if (display.value === '0' && val === '0') return;
-      if (display.value === '0' && val !== '.' && !operators.includes(val)) {
-        // replace leading zero with new digit
-        display.value = val;
-        return;
-      }
-
-      display.value += val;
-    }
-
-    function clearDisplay() {
-      display.value = '';
-      display.focus();
-    }
-
-    function calculate() {
-      if (!display.value) return;
-      try {
-        // Use Function constructor instead of eval for slight safety/readability
-        // Note: this is still executing user input; for production consider a proper parser.
-        const sanitized = display.value.replace(/[^0-9+\-*/().]/g, '');
-        // Prevent trailing operator
-        if (/[+\-*/.]$/.test(sanitized)) return showError();
-        const result = Function('"use strict";return (' + sanitized + ')')();
-        display.value = (result === undefined || Number.isNaN(result)) ? 'Error' : String(result);
-      } catch (e) {
-        showError();
-      }
-      display.focus();
-    }
-
-    function showError() {
-      display.value = 'Error';
-      setTimeout(() => display.value = '', 900);
-    }
-
-    // Optional: allow keyboard input when focused (desktop)
-    document.addEventListener('keydown', (e) => {
-      const allowed = '0123456789.+-*/()';
-      if (allowed.includes(e.key)) {
-        appendValue(e.key);
-        e.preventDefault();
-      } else if (e.key === 'Enter') {
-        calculate();
-        e.preventDefault();
-      } else if (e.key === 'Backspace') {
-        display.value = display.value.slice(0, -1);
-        e.preventDefault();
-      } else if (e.key === 'Escape') {
-        clearDisplay();
-        e.preventDefault();
-      }
-    });
-  </script>
-</body>
-</html>
+// Utiliti
