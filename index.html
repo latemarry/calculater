@@ -1,107 +1,249 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Calculator UI</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .calculator {
-            background: #fff;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            width: 260px;
-        }
-        .display {
-            width: 100%;
-            height: 40px;
-            margin-bottom: 15px;
-            font-size: 1.5em;
-            text-align: right;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            background: #f9f9f9;
-            box-sizing: border-box;
-        }
-        .buttons {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-        }
-        .button {
-            padding: 15px;
-            font-size: 1.1em;
-            border: none;
-            border-radius: 6px;
-            background: #e0e0e0;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .button:active {
-            background: #bdbdbd;
-        }
-        .button.operator {
-            background: #ffd54f;
-        }
-        .button.equal {
-            background: #4caf50;
-            color: #fff;
-            grid-column: span 2;
-        }
-        .button.clear {
-            background: #e57373;
-            color: #fff;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calculator UI</title>
+  <style>
+    /* Mobile-first base */
+    :root{
+      --bg: #f4f4f4;
+      --card: #fff;
+      --muted: #e0e0e0;
+      --operator: #ffd54f;
+      --equal: #4caf50;
+      --danger: #e57373;
+      --shadow: 0 2px 8px rgba(0,0,0,0.08);
+      --radius: 12px;
+    }
+
+    html,body{
+      height:100%;
+      margin:0;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .calculator {
+      width: 100%;
+      max-width: 420px;     /* prevents growing too wide on large screens */
+      background: var(--card);
+      padding: 14px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      box-sizing: border-box;
+    }
+
+    /* Display */
+    .display {
+      width: 100%;
+      height: 56px;                 /* touch-friendly */
+      margin-bottom: 14px;
+      font-size: clamp(1.25rem, 4.5vw, 1.75rem);
+      text-align: right;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: #fafafa;
+      box-sizing: border-box;
+      color: #111;
+      caret-color: transparent;     /* since input is disabled/readonly */
+    }
+
+    /* Buttons grid */
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .button {
+      min-height: 56px;             /* touch target >= 48-56px */
+      padding: 10px;
+      font-size: clamp(1rem, 3.2vw, 1.1rem);
+      border: none;
+      border-radius: 8px;
+      background: var(--muted);
+      cursor: pointer;
+      transition: transform .08s ease, box-shadow .08s ease;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.03) inset;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .button:active {
+      transform: translateY(1px);
+      filter: brightness(.95);
+    }
+
+    .button.operator {
+      background: var(--operator);
+    }
+
+    .button.equal {
+      background: var(--equal);
+      color: #fff;
+      grid-column: span 2;
+    }
+
+    .button.clear {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    /* Make sure last row buttons look good on narrow screens */
+    .row-span-2 {
+      grid-column: span 2;
+    }
+
+    /* Larger screens — give a bit more padding and spacing */
+    @media (min-width: 640px) {
+      .calculator {
+        padding: 20px;
+      }
+      .buttons { gap: 12px; }
+      .button { min-height: 64px; border-radius: 10px; }
+    }
+
+    /* Landscape small devices: center and limit vertical stretching */
+    @media (max-height: 420px) and (orientation: landscape) {
+      body { align-items: flex-start; padding-top: 18px; padding-bottom: 18px; }
+      .calculator { max-width: 520px; }
+    }
+
+    /* Accessibility focus states */
+    .button:focus {
+      outline: 3px solid rgba(80,150,255,0.18);
+      outline-offset: 2px;
+    }
+    .display:focus {
+      outline: 3px solid rgba(80,150,255,0.1);
+    }
+  </style>
 </head>
 <body>
-    <div class="calculator">
-        <input type="text" class="display" id="display" disabled>
-        <div class="buttons">
-            <button class="button clear" onclick="clearDisplay()">C</button>
-            <button class="button" onclick="appendValue('(')">(</button>
-            <button class="button" onclick="appendValue(')')">)</button>
-            <button class="button operator" onclick="appendValue('/')">÷</button>
-            <button class="button" onclick="appendValue('7')">7</button>
-            <button class="button" onclick="appendValue('8')">8</button>
-            <button class="button" onclick="appendValue('9')">9</button>
-            <button class="button operator" onclick="appendValue('*')">×</button>
-            <button class="button" onclick="appendValue('4')">4</button>
-            <button class="button" onclick="appendValue('5')">5</button>
-            <button class="button" onclick="appendValue('6')">6</button>
-            <button class="button operator" onclick="appendValue('-')">−</button>
-            <button class="button" onclick="appendValue('1')">1</button>
-            <button class="button" onclick="appendValue('2')">2</button>
-            <button class="button" onclick="appendValue('3')">3</button>
-            <button class="button operator" onclick="appendValue('+')">+</button>
-            <button class="button" onclick="appendValue('0')">0</button>
-            <button class="button" onclick="appendValue('.')">.</button>
-            <button class="button equal" onclick="calculate()">=</button>
-        </div>
+  <div class="calculator" role="application" aria-label="Simple calculator">
+    <!-- use readonly instead of disabled so screen-readers can read it and it can be focused -->
+    <input type="text" class="display" id="display" aria-label="Calculator display" readonly />
+
+    <div class="buttons" role="group" aria-label="Calculator buttons">
+      <button class="button clear" onclick="clearDisplay()" aria-label="Clear (C)">C</button>
+      <button class="button" onclick="appendValue('(')" aria-label="Open parenthesis">(</button>
+      <button class="button" onclick="appendValue(')')" aria-label="Close parenthesis">)</button>
+      <button class="button operator" onclick="appendValue('/')" aria-label="Divide">÷</button>
+
+      <button class="button" onclick="appendValue('7')" aria-label="Seven">7</button>
+      <button class="button" onclick="appendValue('8')" aria-label="Eight">8</button>
+      <button class="button" onclick="appendValue('9')" aria-label="Nine">9</button>
+      <button class="button operator" onclick="appendValue('*')" aria-label="Multiply">×</button>
+
+      <button class="button" onclick="appendValue('4')" aria-label="Four">4</button>
+      <button class="button" onclick="appendValue('5')" aria-label="Five">5</button>
+      <button class="button" onclick="appendValue('6')" aria-label="Six">6</button>
+      <button class="button operator" onclick="appendValue('-')" aria-label="Minus">−</button>
+
+      <button class="button" onclick="appendValue('1')" aria-label="One">1</button>
+      <button class="button" onclick="appendValue('2')" aria-label="Two">2</button>
+      <button class="button" onclick="appendValue('3')" aria-label="Three">3</button>
+      <button class="button operator" onclick="appendValue('+')" aria-label="Plus">+</button>
+
+      <button class="button" onclick="appendValue('0')" aria-label="Zero">0</button>
+      <button class="button" onclick="appendValue('.')" aria-label="Decimal point">.</button>
+      <button class="button equal" onclick="calculate()" aria-label="Equals">=</button>
     </div>
-    <script>
-        const display = document.getElementById('display');
-        function appendValue(val) {
+  </div>
+
+  <script>
+    const display = document.getElementById('display');
+
+    // Small helper: avoid adding multiple leading zeros or duplicate operators in a row.
+    function appendValue(val) {
+      // Basic validation rules
+      const lastChar = display.value.slice(-1);
+
+      // Prevent two operators in a row (except for '(' and ')' rules)
+      const operators = ['+', '-', '*', '/', '.'];
+      if (operators.includes(val)) {
+        // if display empty and '.' pressed, allow "0."
+        if (!display.value && val === '.') {
+          display.value = '0.';
+          return;
+        }
+        if (!display.value && (val !== '.')) return;
+        if (operators.includes(lastChar)) {
+          // replace last operator with new one (except allow '.' after digit)
+          if (val === '.' && lastChar !== '.') {
             display.value += val;
+            return;
+          }
+          // replace operator to avoid sequences like "++" or "+*"
+          display.value = display.value.slice(0, -1) + val;
+          return;
         }
-        function clearDisplay() {
-            display.value = '';
-        }
-        function calculate() {
-            try {
-                display.value = eval(display.value);
-            } catch {
-                display.value = 'Error';
-            }
-        }
-    </script>
+      }
+
+      // prevent multiple leading zeros like "00"
+      if (display.value === '0' && val === '0') return;
+      if (display.value === '0' && val !== '.' && !operators.includes(val)) {
+        // replace leading zero with new digit
+        display.value = val;
+        return;
+      }
+
+      display.value += val;
+    }
+
+    function clearDisplay() {
+      display.value = '';
+      display.focus();
+    }
+
+    function calculate() {
+      if (!display.value) return;
+      try {
+        // Use Function constructor instead of eval for slight safety/readability
+        // Note: this is still executing user input; for production consider a proper parser.
+        const sanitized = display.value.replace(/[^0-9+\-*/().]/g, '');
+        // Prevent trailing operator
+        if (/[+\-*/.]$/.test(sanitized)) return showError();
+        const result = Function('"use strict";return (' + sanitized + ')')();
+        display.value = (result === undefined || Number.isNaN(result)) ? 'Error' : String(result);
+      } catch (e) {
+        showError();
+      }
+      display.focus();
+    }
+
+    function showError() {
+      display.value = 'Error';
+      setTimeout(() => display.value = '', 900);
+    }
+
+    // Optional: allow keyboard input when focused (desktop)
+    document.addEventListener('keydown', (e) => {
+      const allowed = '0123456789.+-*/()';
+      if (allowed.includes(e.key)) {
+        appendValue(e.key);
+        e.preventDefault();
+      } else if (e.key === 'Enter') {
+        calculate();
+        e.preventDefault();
+      } else if (e.key === 'Backspace') {
+        display.value = display.value.slice(0, -1);
+        e.preventDefault();
+      } else if (e.key === 'Escape') {
+        clearDisplay();
+        e.preventDefault();
+      }
+    });
+  </script>
 </body>
 </html>
